@@ -19,7 +19,7 @@ If ALL is specified as the first argument, the function will be packaged, deploy
 ## Deployment Notes
 Ideally, all of this solution would be a small, self-contained SAM application.  But due to [this issue](https://github.com/awslabs/aws-sam-cli/issues/206), SAM cannot subscribe events to pre-existing buckets.  Therefore, the deploy script has to add the Lambda permissions and S3 event subscription after the function has been created.  This is all performed using the AWS CLI in the deploy.sh script.
 
-Want to monitor multiple buckets?  Just run deploy.sh with a different origin bucket (parameter 2).  You'll get a different
+Want to monitor multiple buckets?  Just run deploy.sh with a different origin bucket (parameter 2).  You'll get a different event subscription to the Lambda function.
 
 ## Running locally
 The function can be executed locally using the SAM CLI and the SampleEvent.json in the project.  You will need Docker installed to enable local execution via SAM
