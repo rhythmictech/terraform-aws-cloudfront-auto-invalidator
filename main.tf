@@ -1,0 +1,84 @@
+data "archive_file" "lambda" {
+  type        = "zip"
+  output_path = "${path.module}/tmp/lambda.zip"
+  source_file = "${path.module}/src/app.py"
+}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  name_prefix        = "${var.name}-role-"
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+
+  tags = merge(
+    var.tags,
+    {
+      "Name" = "${var.name}-role"
+    }
+  )
+}
+
+resource "aws_iam_role_policy_attachment" "basic_execution" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "cloudfront_read" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudFrontReadOnlyAccess"
+}
+
+data "aws_iam_policy_document" "cloudfront_invalidations" {
+  statement {
+    actions = [
+      "cloudfront:CreateInvalidation"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "cloudfront_invalidations" {
+  name_prefix = "cloudfront-invalidations-"
+  policy      = data.aws_iam_policy_document.cloudfront_invalidations.json
+  role        = aws_iam_role.lambda.name
+}
+
+resource "aws_lambda_function" "this" {
+  filename         = data.archive_file.lambda.output_path
+  function_name    = var.name
+  handler          = "lambda_handler"
+  memory_size      = var.memory_size
+  role             = aws_iam_role.lambda.arn
+  runtime          = var.runtime
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+  timeout          = var.timeout
+
+  environment {
+    variables = merge(
+      local.common_env_vars,
+      contains(each.value.extra_env_vars, "SMARTYSTREETS_URL") ? { "SMARTYSTREETS_URL" = local.smartystreets_url } : {},
+      contains(each.value.extra_env_vars, "GEOLOCATOR") ? { "GEOLOCATOR" = local.geolocator_url } : {}
+    )
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      "Name" = "${var.name}"
+    }
+  )
+}

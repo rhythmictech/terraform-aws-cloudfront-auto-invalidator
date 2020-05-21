@@ -1,1 +1,11 @@
 packaged.yaml
+
+.terraform
+*.tfstate
+*.tfstate.backup
+
+*/tmp
+
+.DS_store
+
+*.zip
