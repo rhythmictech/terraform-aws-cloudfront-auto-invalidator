@@ -5,6 +5,7 @@ packaged.yaml
 *.tfstate.backup
 
 */tmp
+*/tmp/*
 
 .DS_store
 
