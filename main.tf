@@ -67,18 +67,17 @@ resource "aws_lambda_function" "this" {
   source_code_hash = data.archive_file.lambda.output_base64sha256
   timeout          = var.timeout
 
-  environment {
-    variables = merge(
-      local.common_env_vars,
-      contains(each.value.extra_env_vars, "SMARTYSTREETS_URL") ? { "SMARTYSTREETS_URL" = local.smartystreets_url } : {},
-      contains(each.value.extra_env_vars, "GEOLOCATOR") ? { "GEOLOCATOR" = local.geolocator_url } : {}
-    )
-  }
-
   tags = merge(
     var.tags,
     {
       "Name" = "${var.name}"
     }
   )
+}
+
+resource "aws_lambda_permission" "allow_S3_notification" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.this.arn
+  principal     = "s3.amazonaws.com"
 }
