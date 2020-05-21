@@ -60,7 +60,7 @@ resource "aws_iam_role_policy" "cloudfront_invalidations" {
 resource "aws_lambda_function" "this" {
   filename         = data.archive_file.lambda.output_path
   function_name    = var.name
-  handler          = "lambda_handler"
+  handler          = "app.lambda_handler"
   memory_size      = var.memory_size
   role             = aws_iam_role.lambda.arn
   runtime          = var.runtime
