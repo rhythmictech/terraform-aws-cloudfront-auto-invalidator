@@ -1,5 +1,5 @@
 variable "memory_size" {
-  default     = 512
+  default     = 128
   description = "Function memory in MB"
   type        = number
 }
